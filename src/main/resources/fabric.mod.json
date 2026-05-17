@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "gameinfo",
+  "version": "${version}",
+  "name": "gameinfo",
+  "description": "信息显示[偏牧定制二改版]",
+  "authors": ["xiatong"],
+  "contact": {
+    "repo": "无"
+  },
+  "license": "All-Rights-Reserved",
+  "icon": "assets/gameinfo/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "com.cxk.gameinfo.GameinfoClient"
+    ],
+    "main": [
+      "com.cxk.gameinfo.Gameinfo"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": ">=26.1"
+  }
+}
