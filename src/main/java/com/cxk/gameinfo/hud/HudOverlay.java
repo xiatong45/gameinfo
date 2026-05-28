@@ -2,6 +2,8 @@ package com.cxk.gameinfo.hud;
 
 import com.cxk.gameinfo.GameinfoClient;
 import com.cxk.gameinfo.config.GameInfoConfig;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
@@ -76,6 +78,7 @@ public class HudOverlay implements HudElement {
         // 左上角屏幕渲染
         yPos += renderFPS(drawContext, xPos, yPos);
         yPos += renderTimeAndDays(drawContext, xPos, yPos);
+        yPos += renderRealTime(drawContext, xPos, yPos);
         yPos += renderCoordinates(drawContext, xPos, yPos);
         yPos += renderNetherCoordinates(drawContext, xPos, yPos);
         yPos += renderBiome(drawContext, xPos, yPos);
@@ -190,6 +193,23 @@ public class HudOverlay implements HudElement {
         String formatDate = String.format("%02d:%02d", hours, minutes);
         drawContext.text(textRenderer, formatDate, x + width, y, DEFAULT_COLOR, true);
         return DEFAULT_HEIGHT;
+    }
+
+    private int renderRealTime(GuiGraphicsExtractor drawContext, int x, int y) {
+        if (!config.showRealTime) return 0;
+        LocalDateTime now = LocalDateTime.now();
+        String[] weekDays = {"星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"};
+        String weekDayText = weekDays[now.getDayOfWeek().getValue() - 1];
+        String labelText = "现实时间: ";
+        drawContext.text(textRenderer, labelText, x, y, color, true);
+
+        int labelWidth = textRenderer.width(labelText);
+        String dateText = now.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+        drawContext.text(textRenderer, dateText, x + labelWidth, y, DEFAULT_COLOR, true);
+
+        String timeText = now.format(DateTimeFormatter.ofPattern("HH:mm:ss")) + " " + weekDayText;
+        drawContext.text(textRenderer, timeText, x, y + DEFAULT_HEIGHT, DEFAULT_COLOR, true);
+        return DEFAULT_HEIGHT * 2;
     }
 
     private int renderCoordinates(GuiGraphicsExtractor drawContext, int x, int y) {

@@ -23,6 +23,7 @@ public class GameInfoConfigScreen extends Screen {
     // 信息开关Tab的组件
     private Button fpsButton;
     private Button timeButton;
+    private Button realTimeButton;
     private Button coordButton;
     private Button netherButton;
     private Button biomeButton;
@@ -126,6 +127,10 @@ public class GameInfoConfigScreen extends Screen {
                     GameinfoClient.logger("启用游戏信息: " + value);
                 },
                 leftX, startY + spacing * 4, buttonWidth, buttonHeight));
+
+        this.realTimeButton = this.addRenderableWidget(GuiHelper.createToggleButton(
+                "现实时间", () -> config.showRealTime, value -> config.showRealTime = value,
+                leftX, startY + spacing * 5, buttonWidth, buttonHeight));
 
         // 右列
         int rightX = centerX + sideMargin;

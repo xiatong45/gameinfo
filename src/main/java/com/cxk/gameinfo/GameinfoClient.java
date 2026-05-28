@@ -1,6 +1,5 @@
 package com.cxk.gameinfo;
 
-import com.cxk.gameinfo.command.ChunkLoader;
 import com.cxk.gameinfo.command.GameInfoCommand;
 import com.cxk.gameinfo.config.GameInfoConfig;
 import com.cxk.gameinfo.hud.BlockInfoHudRenderer;
@@ -12,7 +11,6 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.resources.Identifier;
 
 
@@ -20,7 +18,6 @@ public class GameinfoClient implements ClientModInitializer {
     public static String modName = "gameinfo";
     public static GameInfoConfig config = new GameInfoConfig(); // 初始化配置
     public static GameInfoCommand command = new GameInfoCommand(); // 注册指令
-    public static ChunkLoader chunkLoader = new ChunkLoader(); // 注册指令
     public static HudOverlay hudOverlay = new HudOverlay(); // 创建HUD覆盖层
     public static BlockInfoHudRenderer blockInfoHudRenderer = new BlockInfoHudRenderer(); // 创建方块信息HUD渲染器
     public static EntityHealthHudRenderer entityHealthHudRenderer = new EntityHealthHudRenderer(); // 创建实体血量HUD渲染器
@@ -28,7 +25,6 @@ public class GameinfoClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         ClientCommandRegistrationCallback.EVENT.register(command);
-        CommandRegistrationCallback.EVENT.register(chunkLoader);
         KeybindHandler.register(); // 注册按键绑定
         HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, Identifier.fromNamespaceAndPath(modName, "custom_text"), hudOverlay); // 注册HUD元素
         HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, Identifier.fromNamespaceAndPath(modName, "block_info"), blockInfoHudRenderer); // 注册方块信息HUD元素

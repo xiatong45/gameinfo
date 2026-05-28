@@ -14,6 +14,7 @@ import net.minecraft.util.CommonColors;
 public class GameInfoConfig {
     public boolean showFPS = true; // 是否显示FPS
     public boolean showTimeAndDays = true; // 是否显示时间
+    public boolean showRealTime = false; // 是否显示现实时间
     public boolean showCoordinates = true; // 是否显示坐标
     public boolean showNetherCoordinates = true; // 是否显示下届坐标
     public boolean showBiome = false; // 是否显示群系
@@ -42,6 +43,7 @@ public class GameInfoConfig {
         if (flag) {
             showFPS = false;
             showTimeAndDays = false;
+            showRealTime = false;
             showCoordinates = false;
             showNetherCoordinates = false;
             showBiome = false;
@@ -67,6 +69,7 @@ public class GameInfoConfig {
             properties.load(input);
             showFPS = Boolean.parseBoolean(properties.getProperty("showFPS", "true"));
             showTimeAndDays = Boolean.parseBoolean(properties.getProperty("showTimeAndDays", "true"));
+            showRealTime = Boolean.parseBoolean(properties.getProperty("showRealTime", "false"));
             showCoordinates = Boolean.parseBoolean(properties.getProperty("showCoordinates", "true"));
             showNetherCoordinates = Boolean.parseBoolean(properties.getProperty("showNetherCoordinates", "true"));
             showBiome = Boolean.parseBoolean(properties.getProperty("showBiome", "false"));
@@ -91,6 +94,7 @@ public class GameInfoConfig {
         Properties properties = new Properties();
         properties.setProperty("showFPS", Boolean.toString(showFPS));
         properties.setProperty("showTimeAndDays", Boolean.toString(showTimeAndDays));
+        properties.setProperty("showRealTime", Boolean.toString(showRealTime));
         properties.setProperty("showCoordinates", Boolean.toString(showCoordinates));
         properties.setProperty("showNetherCoordinates", Boolean.toString(showNetherCoordinates));
         properties.setProperty("showBiome", Boolean.toString(showBiome));
