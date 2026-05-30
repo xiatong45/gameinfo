@@ -1,11 +1,11 @@
 package com.cxk.gameinfo.gui;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.CommonColors;
+
 
 public class ColorPickerScreen extends Screen {
     private final Screen parent;
@@ -124,23 +124,23 @@ public class ColorPickerScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         // 绘制半透明背景
         context.fill(0, 0, this.width, this.height, 0x80000000);
 
-        super.extractRenderState(context, mouseX, mouseY, delta);
+        super.render(context, mouseX, mouseY, delta);
 
         // 绘制标题
-        context.centeredText(this.font, this.title, this.width / 2, 20, 0xFFFFD700);
+        context.drawString(this.font, this.title, this.width / 2 - this.font.width(this.title) / 2, 20, 0xFFFFD700, false);
 
         // 绘制预设颜色区域标题
-        context.centeredText(this.font, "预设颜色", this.width / 2, 35, CommonColors.WHITE);
+        context.drawString(this.font, "预设颜色", this.width / 2 - this.font.width("预设颜色") / 2, 35, 0xFFFFFFFF, false);
 
         // 绘制自定义颜色区域
         renderCustomColorArea(context);
     }
 
-    private void renderCustomColorArea(GuiGraphicsExtractor context) {
+    private void renderCustomColorArea(GuiGraphics context) {
         int customY = 50 + 4 * (32 + 8) - 8 + 25; // 与init中的customY保持一致
 
         // 绘制自定义颜色区域背景
@@ -151,7 +151,7 @@ public class ColorPickerScreen extends Screen {
 //        context.drawBorder(bgX, customY - 5, bgWidth, bgHeight, 0xFF666666);
 
         // 绘制标题
-        context.centeredText(this.font, "自定义颜色 (ARGB格式)", this.width / 2, customY + 8, 0xFFAAFFAA);
+        context.drawString(this.font, "自定义颜色 (ARGB格式)", this.width / 2 - this.font.width("自定义颜色 (ARGB格式)") / 2, customY + 8, 0xFFAAFFAA, false);
 
         // 计算预览框位置（与init中的布局保持一致）
         int inputWidth = 100;
@@ -169,7 +169,7 @@ public class ColorPickerScreen extends Screen {
         context.fill(previewX, previewY, previewX + previewSize, previewY + previewSize, this.previewColor);
 
         // 绘制说明文本
-        context.text(this.font, "格式: AARRGGBB 例如: FFFF0000", this.width / 2 - 120, customY + 50, 0xFF888888);
+        context.drawString(this.font, "格式: AARRGGBB 例如: FFFF0000", this.width / 2 - 120, customY + 50, 0xFF888888);
     }
 
     @Override
@@ -192,7 +192,7 @@ public class ColorPickerScreen extends Screen {
         }
 
         @Override
-        protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks) {
+        protected void renderWidget(GuiGraphics context, int mouseX, int mouseY, float deltaTicks) {
             // 绘制颜色方块
             context.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.color);
 

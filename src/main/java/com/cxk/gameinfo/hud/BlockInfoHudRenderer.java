@@ -1,10 +1,9 @@
 package com.cxk.gameinfo.hud;
 
 import com.cxk.gameinfo.GameinfoClient;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -16,7 +15,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import java.lang.reflect.Field;
 
-public class BlockInfoHudRenderer implements HudElement {
+public class BlockInfoHudRenderer {
 
     private static Field currentBreakingProgressField;
 
@@ -44,12 +43,12 @@ public class BlockInfoHudRenderer implements HudElement {
         return intProgress >= 0 ? intProgress / 10.0f : -1.0f;
     }
 
-    @Override
-    public void extractRenderState(GuiGraphicsExtractor drawContext, DeltaTracker tickCounter) {
+    public void onHudRender(GuiGraphics drawContext, DeltaTracker tickCounter) {
+        Minecraft client = Minecraft.getInstance();
+        // 按F1隐藏HUD时也不渲染
+        if (client.options.hideGui) return;
         // 检查配置是否启用方块信息显示
         if (!GameinfoClient.config.showBlockInfo) return;
-
-        Minecraft client = Minecraft.getInstance();
         // 确保客户端和世界存在
         if (client == null || client.level == null || client.player == null) return;
         // 获取玩家正在看的目标
@@ -163,16 +162,16 @@ public class BlockInfoHudRenderer implements HudElement {
             int posY = nameY + lineHeight; // 坐标位置
 
             // 绘制物品图标
-            drawContext.item(itemStack, itemX, itemY);
+            drawContext.renderItem(itemStack, itemX, itemY);
 
             // 绘制文本
             // 物品名称（淡白色），工具图标根据状态着色，进度百分比用橙色
             if (toolIcon.isEmpty() && progressText.isEmpty()) {
-                drawContext.text(client.font, nameText, textX, nameY, 0xFFE0E0E0, true); // 淡白色
+                drawContext.drawString(client.font, nameText, textX, nameY, 0xFFE0E0E0, true); // 淡白色
             } else {
                 // 分别绘制物品名称、工具图标和进度百分比
                 Component blockNameOnly = Component.literal(blockName);
-                drawContext.text(client.font, blockNameOnly, textX, nameY, 0xFFE0E0E0, true); // 淡白色
+                drawContext.drawString(client.font, blockNameOnly, textX, nameY, 0xFFE0E0E0, true); // 淡白色
 
                 int currentX = textX + client.font.width(blockNameOnly);
 
@@ -180,19 +179,19 @@ public class BlockInfoHudRenderer implements HudElement {
                 if (!toolIcon.isEmpty()) {
                     Component iconText = Component.literal(toolIcon);
                     int iconColor = toolIcon.contains("✓") ? 0xFF70C070 : 0xFFC07070; // 更淡的绿色和红色
-                    drawContext.text(client.font, iconText, currentX, nameY, iconColor, true);
+                    drawContext.drawString(client.font, iconText, currentX, nameY, iconColor, true);
                     currentX += client.font.width(iconText);
                 }
 
                 // 绘制进度百分比 并且不是0
                 if (!progressText.isEmpty() && preciseProgress > 0) {
                     Component progressTextObj = Component.literal(progressText);
-                    drawContext.text(client.font, progressTextObj, currentX, nameY, 0xFFCC8800, true); // 淡橙色
+                    drawContext.drawString(client.font, progressTextObj, currentX, nameY, 0xFFCC8800, true); // 淡橙色
                 }
             }
 
             // 坐标信息（淡青色）
-            drawContext.text(client.font, posText, textX, posY, 0xFF70C0C0, true); // 更淡的青色
+            drawContext.drawString(client.font, posText, textX, posY, 0xFF70C0C0, true); // 更淡的青色
         }
     }
 }

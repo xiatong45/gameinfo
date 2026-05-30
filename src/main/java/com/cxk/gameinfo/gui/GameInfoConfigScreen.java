@@ -5,7 +5,7 @@ import com.cxk.gameinfo.config.GameInfoConfig;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -14,7 +14,13 @@ import net.minecraft.network.chat.Component;
 public class GameInfoConfigScreen extends Screen {
     private final Screen parent;
     private GameInfoConfig config;
-    
+    // 配置快照，用于取消时恢复
+    private boolean snapshotShowFPS, snapshotShowTimeAndDays, snapshotShowRealTime;
+    private boolean snapshotShowCoordinates, snapshotShowNetherCoordinates, snapshotShowBiome;
+    private boolean snapshotRemark, snapshotShowEquipment, snapshotShowEntityInfo, snapshotShowBlockInfo;
+    private boolean snapshotEnabled;
+    private int snapshotColor, snapshotXPos, snapshotYPos;
+
     // Tab相关
     private int currentTab = 0;
     private final List<TabButton> tabButtons = new ArrayList<>();
@@ -44,6 +50,41 @@ public class GameInfoConfigScreen extends Screen {
         super(Component.literal("游戏信息配置"));
         this.parent = parent;
         this.config = GameinfoClient.config;
+        saveSnapshot();
+    }
+
+    private void saveSnapshot() {
+        snapshotShowFPS = config.showFPS;
+        snapshotShowTimeAndDays = config.showTimeAndDays;
+        snapshotShowRealTime = config.showRealTime;
+        snapshotShowCoordinates = config.showCoordinates;
+        snapshotShowNetherCoordinates = config.showNetherCoordinates;
+        snapshotShowBiome = config.showBiome;
+        snapshotRemark = config.remark;
+        snapshotShowEquipment = config.showEquipment;
+        snapshotShowEntityInfo = config.showEntityInfo;
+        snapshotShowBlockInfo = config.showBlockInfo;
+        snapshotEnabled = config.enabled;
+        snapshotColor = config.color;
+        snapshotXPos = config.xPos;
+        snapshotYPos = config.yPos;
+    }
+
+    private void restoreSnapshot() {
+        config.showFPS = snapshotShowFPS;
+        config.showTimeAndDays = snapshotShowTimeAndDays;
+        config.showRealTime = snapshotShowRealTime;
+        config.showCoordinates = snapshotShowCoordinates;
+        config.showNetherCoordinates = snapshotShowNetherCoordinates;
+        config.showBiome = snapshotShowBiome;
+        config.remark = snapshotRemark;
+        config.showEquipment = snapshotShowEquipment;
+        config.showEntityInfo = snapshotShowEntityInfo;
+        config.showBlockInfo = snapshotShowBlockInfo;
+        config.enabled = snapshotEnabled;
+        config.color = snapshotColor;
+        config.xPos = snapshotXPos;
+        config.yPos = snapshotYPos;
     }
 
     @Override
@@ -189,21 +230,21 @@ public class GameInfoConfigScreen extends Screen {
         }, centerX - 55, bottomY, 50, 20));
 
         this.addRenderableWidget(GuiHelper.createButton("取消", () -> {
-            // 取消时重新加载配置文件，恢复之前的设置
-            config.loadConfig();
+            // 取消时从快照恢复之前的设置
+            restoreSnapshot();
             this.onClose();
         }, centerX + 5, bottomY, 50, 20));
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         // 绘制半透明背景
         context.fill(0, 0, this.width, this.height, 0x50000000);
         
-        super.extractRenderState(context, mouseX, mouseY, delta);
+        super.render(context, mouseX, mouseY, delta);
 
         // 绘制标题
-        context.centeredText(this.font, this.title, this.width / 2, 20, 0xFFFFD700);
+        context.drawString(this.font, this.title, this.width / 2 - this.font.width(this.title) / 2, 20, 0xFFFFD700, false);
         
         // 绘制Tab内容区域背景
         int tabContentY = 60;
@@ -219,18 +260,18 @@ public class GameInfoConfigScreen extends Screen {
         }
     }
     
-    private void renderInfoToggleTab(GuiGraphicsExtractor context) {
+    private void renderInfoToggleTab(GuiGraphics context) {
         int centerX = this.width / 2;
-        context.centeredText(this.font, "选择要显示的信息", centerX, 70, 0xFFAAFFAA);
+        context.drawString(this.font, "选择要显示的信息", centerX - this.font.width("选择要显示的信息") / 2, 70, 0xFFAAFFAA, false);
     }
     
-    private void renderColorSettingTab(GuiGraphicsExtractor context) {
+    private void renderColorSettingTab(GuiGraphics context) {
         int centerX = this.width / 2;
         int startY = 100;
         int spacing = 30;
         
         // 绘制标题
-        context.centeredText(this.font, "自定义显示位置和颜色", centerX, 70, 0xFFAAFFAA);
+        context.drawString(this.font, "自定义显示位置和颜色", centerX - this.font.width("自定义显示位置和颜色") / 2, 70, 0xFFAAFFAA, false);
         
         // 绘制位置设置区域背景
         int bgX = centerX - 150;
@@ -241,8 +282,8 @@ public class GameInfoConfigScreen extends Screen {
 //        context.drawBorder(bgX, bgY, bgWidth, bgHeight, 0xFF444444);
         
         // 绘制X和Y标签
-        context.text(this.font, "X:", centerX - 85, startY + 4, 0xFFFFFFFF);
-        context.text(this.font, "Y:", centerX - 5, startY + 4, 0xFFFFFFFF);
+        context.drawString(this.font, "X:", centerX - 85, startY + 4, 0xFFFFFFFF);
+        context.drawString(this.font, "Y:", centerX - 5, startY + 4, 0xFFFFFFFF);
         
         // 绘制颜色预览
         int colorSize = 24;
@@ -274,7 +315,7 @@ public class GameInfoConfigScreen extends Screen {
         
 
         @Override
-        protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks) {
+        protected void renderWidget(GuiGraphics context, int mouseX, int mouseY, float deltaTicks) {
             // 根据状态选择颜色
             int bgColor = isActive ? 0xFF4A4A4A : 0xFF2A2A2A;
             int borderColor = isActive ? 0xFFFFFFFF : 0xFF666666;
@@ -296,7 +337,7 @@ public class GameInfoConfigScreen extends Screen {
             // 绘制文本
             int textX = this.getX() + this.width / 2;
             int textY = this.getY() + (this.height - 8) / 2;
-            context.centeredText(Minecraft.getInstance().font, this.getMessage(), textX, textY, textColor);
+            context.drawString(Minecraft.getInstance().font, this.getMessage(), textX - Minecraft.getInstance().font.width(this.getMessage()) / 2, textY, textColor, false);
         }
     }
 }

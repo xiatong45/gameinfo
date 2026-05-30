@@ -9,7 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 import net.minecraft.SharedConstants;
-import net.minecraft.util.CommonColors;
+
 
 public class GameInfoConfig {
     public boolean showFPS = true; // 是否显示FPS
@@ -23,7 +23,7 @@ public class GameInfoConfig {
     public Integer yPos = 3; // y 坐标
     public boolean remark = true; // 是否显示备注
     public double scale = 0.5; // 文字
-    public String version = SharedConstants.getCurrentVersion().name(); // 默认使用当前游戏版本
+    public String version = SharedConstants.getCurrentVersion().getName(); // 默认使用当前游戏版本
     public boolean showEquipment = true;
     public boolean showFurnaceInfo = false; // 是否显示熔炉信息
     public boolean showEntityInfo = false; // 是否显示生物信息
@@ -79,7 +79,7 @@ public class GameInfoConfig {
             remark = Boolean.parseBoolean(properties.getProperty("remark", "true"));
             scale = Double.parseDouble(properties.getProperty("scale", "0.5"));
             // 如果配置文件中没有version，则使用当前游戏版本
-            version = properties.getProperty("version", SharedConstants.getCurrentVersion().name());
+            version = properties.getProperty("version", SharedConstants.getCurrentVersion().getName());
             showEquipment = Boolean.parseBoolean(properties.getProperty("showEquipment", "true"));
             showFurnaceInfo = Boolean.parseBoolean(properties.getProperty("showFurnaceInfo", "true"));
             showEntityInfo = Boolean.parseBoolean(properties.getProperty("showEntityInfo", "true"));

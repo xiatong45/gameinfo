@@ -1,9 +1,9 @@
 package com.cxk.gameinfo.hud;
 
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
+
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -15,16 +15,15 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 
-public class EntityHealthHudRenderer implements HudElement {
+public class EntityHealthHudRenderer {
 
-    @Override
-    public void extractRenderState(GuiGraphicsExtractor drawContext, DeltaTracker tickCounter) {
+    public void onHudRender(GuiGraphics drawContext, DeltaTracker tickCounter) {
+        Minecraft client = Minecraft.getInstance();
+        // 按F1隐藏HUD时也不渲染
+        if (client.options.hideGui) return;
         // 检查配置是否启用生物信息显示
         if (!com.cxk.gameinfo.GameinfoClient.config.showEntityInfo) return;
-        
-        Minecraft client = Minecraft.getInstance();
-        // 确保客户端和世界存在
-        if (client == null || client.level == null || client.player == null) return;
+
         
         // 获取玩家正在看的目标
         HitResult hitResult = client.hitResult;
@@ -35,7 +34,7 @@ public class EntityHealthHudRenderer implements HudElement {
         }
     }
 
-    private void renderEntityInfo(GuiGraphicsExtractor drawContext, EntityHitResult entityHitResult, Minecraft client) {
+    private void renderEntityInfo(GuiGraphics drawContext, EntityHitResult entityHitResult, Minecraft client) {
         Entity entity = entityHitResult.getEntity();
         
         // 只显示生物实体的信息
@@ -98,14 +97,14 @@ public class EntityHealthHudRenderer implements HudElement {
         ItemStack displayItem = getEntityDisplayItem(entity);
 
         // 绘制图标
-        drawContext.item(displayItem, itemX, itemY);
+        drawContext.renderItem(displayItem, itemX, itemY);
 
         // 绘制文本
-        drawContext.text(client.font, nameText, nameTextX, nameY, 0xFFFFFFFF, true);
+        drawContext.drawString(client.font, nameText, nameTextX, nameY, 0xFFFFFFFF, true);
         
         // 根据血量比例决定血量文字颜色
         int healthColor = getHealthColor(health, maxHealth);
-        drawContext.text(client.font, healthText, healthTextX, healthY, healthColor, true);
+        drawContext.drawString(client.font, healthText, healthTextX, healthY, healthColor, true);
         
         // 绘制血量条
         renderHealthBar(drawContext, health, maxHealth, textAreaX, barY, maxTextWidth);
@@ -139,7 +138,7 @@ public class EntityHealthHudRenderer implements HudElement {
         }
     }
 
-    private void renderHealthBar(GuiGraphicsExtractor drawContext, float health, float maxHealth, int x, int y, int width) {
+    private void renderHealthBar(GuiGraphics drawContext, float health, float maxHealth, int x, int y, int width) {
         int barHeight = 3;
         float healthPercentage = health / maxHealth;
         
