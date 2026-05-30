@@ -234,7 +234,10 @@ public class HudOverlay {
         if (!config.showCoordinates) return 0;
         LocalPlayer player = client.player;
         if (player == null) return 0;
-        BlockPos pos = player.blockPosition(); // 获取玩家的方块位置
+        
+        // 获取相机或玩家位置(兼容 Tweakeroo Free Camera)
+        BlockPos pos = getCameraOrPlayerPosition();
+        
         String directionString = getDirectionString();
         String xyzText = "XYZ: ";
         drawContext.drawString(textRenderer, xyzText, x, y, color, true);
@@ -244,13 +247,41 @@ public class HudOverlay {
         return DEFAULT_HEIGHT;
     }
 
+    /**
+     * 获取相机或玩家位置
+     * 如果启用了 Free Camera,则返回相机位置
+     * 否则返回玩家实体位置
+     */
+    private BlockPos getCameraOrPlayerPosition() {
+        try {
+            // 获取相机位置
+            net.minecraft.world.phys.Vec3 cameraPos = client.gameRenderer.getMainCamera().getPosition();
+            BlockPos cameraBlockPos = new BlockPos((int) cameraPos.x, (int) cameraPos.y, (int) cameraPos.z);
+            
+            // 获取玩家位置
+            BlockPos playerBlockPos = client.player.blockPosition();
+            
+            // 如果相机位置和玩家位置不同,说明启用了 Free Camera
+            if (!cameraBlockPos.equals(playerBlockPos)) {
+                return cameraBlockPos;
+            }
+        } catch (Exception e) {
+            // 出错时使用默认玩家位置
+        }
+        
+        // 默认返回玩家实体位置
+        return client.player.blockPosition();
+    }
+
 
     private int renderNetherCoordinates(GuiGraphics drawContext, int x, int y) {
         if (!config.showNetherCoordinates) return 0;
         LocalPlayer player = client.player;
         if (player == null) return 0;
         Level world = player.level();
-        BlockPos pos = player.blockPosition();
+        
+        // 使用与主坐标相同的位置获取逻辑(兼容 Tweakeroo Free Camera)
+        BlockPos pos = getCameraOrPlayerPosition();
 
         String coordinateText = "";
         if (world.dimension().location().equals(Level.OVERWORLD.location())) {
@@ -293,9 +324,29 @@ public class HudOverlay {
 
     private String getDirectionString() {
         Direction direction = null;
-        if (client.player != null) {
-            direction = client.player.getDirection();
+        
+        // 如果启用了 Free Camera,使用相机朝向;否则使用玩家朝向
+        try {
+            net.minecraft.world.phys.Vec3 cameraPos = client.gameRenderer.getMainCamera().getPosition();
+            BlockPos cameraBlockPos = new BlockPos((int) cameraPos.x, (int) cameraPos.y, (int) cameraPos.z);
+            BlockPos playerBlockPos = client.player.blockPosition();
+            
+            if (!cameraBlockPos.equals(playerBlockPos)) {
+                // Free Camera 启用,使用相机朝向
+                // 从相机旋转获取方向
+                float yRot = client.gameRenderer.getMainCamera().getYRot();
+                direction = Direction.fromYRot(yRot);
+            } else {
+                // 使用玩家朝向
+                direction = client.player.getDirection();
+            }
+        } catch (Exception e) {
+            // 出错时使用玩家朝向
+            if (client.player != null) {
+                direction = client.player.getDirection();
+            }
         }
+        
         String directionString = null;
         if (direction != null) {
             directionString = switch (direction) {
