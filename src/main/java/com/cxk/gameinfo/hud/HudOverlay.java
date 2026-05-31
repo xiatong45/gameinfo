@@ -284,6 +284,8 @@ public class HudOverlay {
         BlockPos pos = getCameraOrPlayerPosition();
 
         String coordinateText = "";
+        // 末地不显示下界坐标
+        if (world.dimension().location().equals(Level.END.location())) return 0;
         if (world.dimension().location().equals(Level.OVERWORLD.location())) {
             coordinateText = String.format("%d %d", pos.getX() / 8, pos.getZ() / 8);
         } else if (world.dimension().location().equals(Level.NETHER.location())) {
