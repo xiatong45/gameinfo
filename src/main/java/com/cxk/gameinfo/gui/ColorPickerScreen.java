@@ -174,12 +174,12 @@ public class ColorPickerScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.minecraft.setScreen(this.parent);
+        this.minecraft.gui.setScreen(this.parent);
     }
 
     @Override
     public boolean isPauseScreen() {
-        return false;
+        return true;
     }
 
     // 自定义颜色按钮类

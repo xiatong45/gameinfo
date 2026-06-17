@@ -94,7 +94,7 @@ public class HudOverlay implements HudElement {
     private void renderPlayerEquipment(GuiGraphicsExtractor drawContext) {
         if (!config.showEquipment) return;
         LocalPlayer player = client.player;
-        if (player == null || client.options.hideGui) return;
+        if (player == null || client.gui.hud.isHidden()) return;
         int screenWidth = client.getWindow().getGuiScaledWidth();
         int screenHeight = client.getWindow().getGuiScaledHeight();
         // 装备显示在物品栏右侧 物品栏宽度是182像素（9个槽位×20像素+2像素边距），所以91是物品栏右边缘，再加10像素间距
@@ -216,7 +216,8 @@ public class HudOverlay implements HudElement {
         if (!config.showCoordinates) return 0;
         LocalPlayer player = client.player;
         if (player == null) return 0;
-        BlockPos pos = player.blockPosition(); // 获取玩家的方块位置
+        // 获取相机或玩家位置(兼容 Tweakeroo Free Camera / 灵魂出窍)
+        BlockPos pos = getCameraOrPlayerPosition();
         String directionString = getDirectionString();
         String xyzText = "XYZ: ";
         drawContext.text(textRenderer, xyzText, x, y, color, true);
@@ -232,7 +233,8 @@ public class HudOverlay implements HudElement {
         LocalPlayer player = client.player;
         if (player == null) return 0;
         Level world = player.level();
-        BlockPos pos = player.blockPosition();
+        // 使用与主坐标相同的位置获取逻辑(兼容 Tweakeroo Free Camera / 灵魂出窍)
+        BlockPos pos = getCameraOrPlayerPosition();
 
         String coordinateText = "";
         if (world.dimension().identifier().equals(Level.OVERWORLD.identifier())) {
@@ -253,7 +255,8 @@ public class HudOverlay implements HudElement {
         LocalPlayer player = client.player;
         if (player == null) return 0;
         Level world = player.level();
-        BlockPos pos = player.blockPosition();
+        // 使用相机或玩家位置(兼容 Tweakeroo Free Camera / 灵魂出窍)
+        BlockPos pos = getCameraOrPlayerPosition();
 
         Holder<Biome> biomeEntry = world.getBiome(pos);
         Identifier biomeId = biomeEntry.unwrapKey().map(ResourceKey::identifier).orElse(null);
@@ -275,8 +278,22 @@ public class HudOverlay implements HudElement {
 
     private String getDirectionString() {
         Direction direction = null;
-        if (client.player != null) {
-            direction = client.player.getDirection();
+        // 如果启用了 Free Camera(灵魂出窍),使用相机朝向;否则使用玩家朝向
+        try {
+            net.minecraft.world.phys.Vec3 cameraPos = client.gameRenderer.mainCamera().position();
+            BlockPos cameraBlockPos = new BlockPos((int) cameraPos.x, (int) cameraPos.y, (int) cameraPos.z);
+            BlockPos playerBlockPos = client.player.blockPosition();
+            if (!cameraBlockPos.equals(playerBlockPos)) {
+                // Free Camera 启用,使用相机朝向
+                float yRot = client.gameRenderer.mainCamera().yRot();
+                direction = Direction.fromYRot(yRot);
+            } else {
+                direction = client.player.getDirection();
+            }
+        } catch (Exception e) {
+            if (client.player != null) {
+                direction = client.player.getDirection();
+            }
         }
         String directionString = null;
         if (direction != null) {
@@ -289,6 +306,25 @@ public class HudOverlay implements HudElement {
             };
         }
         return directionString;
+    }
+
+    /**
+     * 获取相机或玩家位置
+     * 如果启用了 Free Camera(灵魂出窍),则返回相机位置
+     * 否则返回玩家实体位置
+     */
+    private BlockPos getCameraOrPlayerPosition() {
+        try {
+            net.minecraft.world.phys.Vec3 cameraPos = client.gameRenderer.mainCamera().position();
+            BlockPos cameraBlockPos = new BlockPos((int) cameraPos.x, (int) cameraPos.y, (int) cameraPos.z);
+            BlockPos playerBlockPos = client.player.blockPosition();
+            if (!cameraBlockPos.equals(playerBlockPos)) {
+                return cameraBlockPos;
+            }
+        } catch (Exception e) {
+            // 出错时使用默认玩家位置
+        }
+        return client.player.blockPosition();
     }
 
 }
