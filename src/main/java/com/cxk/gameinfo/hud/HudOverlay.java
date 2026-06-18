@@ -193,11 +193,11 @@ public class HudOverlay {
         if (player == null) return 0;
         Level world = player.level();
 
-        long timeOfDay = world.getLevelData().getGameTime() % 24000;
+        long timeOfDay = world.getLevelData().getDayTime() % 24000;
         // 时间为0的时候对应的是6:00
         int hours = (int) ((6 + (timeOfDay / 1000)) % 24);
         int minutes = (int) ((timeOfDay % 1000) * 60 / 1000);
-        int days = (int) (world.getLevelData().getGameTime() / 24000);
+        int days = (int) ((world.getLevelData().getDayTime() + 6000) / 24000);
         String daysText = "天数: ";
         drawContext.drawString(textRenderer, daysText, x, y, color, true);
         int width = textRenderer.width(daysText);
