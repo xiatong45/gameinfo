@@ -25,9 +25,6 @@ public class GameInfoConfig {
     public double scale = 0.5; // 文字
     public String version = SharedConstants.getCurrentVersion().name(); // 默认使用当前游戏版本
     public boolean showEquipment = true;
-    public boolean showFurnaceInfo = false; // 是否显示熔炉信息
-    public boolean showEntityInfo = false; // 是否显示生物信息
-    public boolean showBlockInfo = false; // 是否显示方块信息
     private static final String CONFIG_FILE = "config" + File.separator + "gameinfo.properties";
 
     public boolean enabled = true; // 是否启用游戏信息显示
@@ -49,9 +46,6 @@ public class GameInfoConfig {
             showBiome = false;
             remark = false;
             showEquipment = false;
-            showFurnaceInfo = false;
-            showEntityInfo = false;
-            showBlockInfo = false;
         } else {
             loadConfig();
             GameinfoClient.logger("加载到配置文件"+ new Gson().toJson(this));
@@ -63,6 +57,7 @@ public class GameInfoConfig {
         File configFile = new File(CONFIG_FILE);
         if (!configFile.exists()) {
             saveConfig(); // 如果文件不存在，保存默认配置
+            return;
         }
         Properties properties = new Properties();
         try (FileInputStream input = new FileInputStream(configFile)) {
@@ -78,13 +73,37 @@ public class GameInfoConfig {
             yPos = Integer.parseInt(properties.getProperty("yPos", "3"));
             remark = Boolean.parseBoolean(properties.getProperty("remark", "true"));
             scale = Double.parseDouble(properties.getProperty("scale", "0.5"));
-            // 如果配置文件中没有version，则使用当前游戏版本
             version = properties.getProperty("version", SharedConstants.getCurrentVersion().name());
             showEquipment = Boolean.parseBoolean(properties.getProperty("showEquipment", "true"));
-            showFurnaceInfo = Boolean.parseBoolean(properties.getProperty("showFurnaceInfo", "true"));
-            showEntityInfo = Boolean.parseBoolean(properties.getProperty("showEntityInfo", "true"));
-            showBlockInfo = Boolean.parseBoolean(properties.getProperty("showBlockInfo", "true"));
             enabled = Boolean.parseBoolean(properties.getProperty("enabled", "true"));
+
+            // 检查是否有缺失的配置项，补上默认值并写回文件
+            boolean missing = false;
+            if (!properties.containsKey("showFPS")) { properties.setProperty("showFPS", "true"); missing = true; }
+            if (!properties.containsKey("showTimeAndDays")) { properties.setProperty("showTimeAndDays", "true"); missing = true; }
+            if (!properties.containsKey("showRealTime")) { properties.setProperty("showRealTime", "false"); missing = true; }
+            if (!properties.containsKey("showCoordinates")) { properties.setProperty("showCoordinates", "true"); missing = true; }
+            if (!properties.containsKey("showNetherCoordinates")) { properties.setProperty("showNetherCoordinates", "true"); missing = true; }
+            if (!properties.containsKey("showBiome")) { properties.setProperty("showBiome", "false"); missing = true; }
+            if (!properties.containsKey("color")) { properties.setProperty("color", "0xFF55FFFF"); missing = true; }
+            if (!properties.containsKey("xPos")) { properties.setProperty("xPos", "3"); missing = true; }
+            if (!properties.containsKey("yPos")) { properties.setProperty("yPos", "3"); missing = true; }
+            if (!properties.containsKey("remark")) { properties.setProperty("remark", "true"); missing = true; }
+            if (!properties.containsKey("scale")) { properties.setProperty("scale", "0.5"); missing = true; }
+            if (!properties.containsKey("version")) { properties.setProperty("version", SharedConstants.getCurrentVersion().name()); missing = true; }
+            if (!properties.containsKey("showEquipment")) { properties.setProperty("showEquipment", "true"); missing = true; }
+            if (!properties.containsKey("enabled")) { properties.setProperty("enabled", "true"); missing = true; }
+
+            if (missing) {
+                // 确保 config 目录存在
+                File parentDir = configFile.getParentFile();
+                if (parentDir != null && !parentDir.exists()) {
+                    parentDir.mkdirs();
+                }
+                try (FileOutputStream output = new FileOutputStream(configFile)) {
+                    properties.store(output, null);
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -105,11 +124,16 @@ public class GameInfoConfig {
         properties.setProperty("scale", Double.toString(scale));
         properties.setProperty("version", version);
         properties.setProperty("showEquipment", Boolean.toString(showEquipment));
-        properties.setProperty("showFurnaceInfo", Boolean.toString(showFurnaceInfo));
-        properties.setProperty("showEntityInfo", Boolean.toString(showEntityInfo));
-        properties.setProperty("showBlockInfo", Boolean.toString(showBlockInfo));
         properties.setProperty("enabled", Boolean.toString(enabled));
-        try (FileOutputStream output = new FileOutputStream(CONFIG_FILE)) {
+
+        // 确保 config 目录存在
+        File configFile = new File(CONFIG_FILE);
+        File parentDir = configFile.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            parentDir.mkdirs();
+        }
+
+        try (FileOutputStream output = new FileOutputStream(configFile)) {
             properties.store(output, null);
         } catch (IOException e) {
             e.printStackTrace();

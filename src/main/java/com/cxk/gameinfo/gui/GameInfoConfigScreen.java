@@ -11,54 +11,92 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-public class GameInfoConfigScreen extends Screen {
-    private final Screen parent;
-    private GameInfoConfig config;
-    
-    // Tab相关
+ public class GameInfoConfigScreen extends Screen {
+     private final Screen parent;
+     private GameInfoConfig config;
+     // 配置快照，用于取消时恢复
+     private boolean snapshotShowFPS, snapshotShowTimeAndDays, snapshotShowRealTime;
+     private boolean snapshotShowCoordinates, snapshotShowNetherCoordinates, snapshotShowBiome, snapshotRemark, snapshotShowEquipment;
+     private boolean snapshotShowFurnaceInfo, snapshotShowEntityInfo, snapshotShowBlockInfo;
+     private boolean snapshotEnabled;
+     private int snapshotColor, snapshotXPos, snapshotYPos;
+     private String snapshotVersion;
+     
+     // Tab相关
     private int currentTab = 0;
     private final List<TabButton> tabButtons = new ArrayList<>();
-    private final String[] tabNames = {"信息开关", "颜色设置"};
-    
-    // 信息开关Tab的组件
-    private Button fpsButton;
+     private final String[] tabNames = {"信息开关", "基础设置"};
+     
+     // 信息开关Tab的组件
+     private Button fpsButton;
     private Button timeButton;
     private Button realTimeButton;
     private Button coordButton;
     private Button netherButton;
     private Button biomeButton;
-    private Button remarkButton;
-    private Button showEquipmentButton;
-    private Button showFurnaceInfoButton;
-    private Button showEntityInfoButton;
-    private Button showBlockInfoButton;
-
-    private Button enableButton;
+     private Button remarkButton;
+     private Button showEquipmentButton;
+ 
+     private Button enableButton;
     
-    // 颜色设置Tab的组件
-    private EditBox xPosField;
-    private EditBox yPosField;
-    private Button colorButton;
+     // 颜色设置Tab的组件
+     private EditBox xPosField;
+     private EditBox yPosField;
+     private EditBox versionField;
+     private Button colorButton;
 
-    public GameInfoConfigScreen(Screen parent) {
-        super(Component.literal("游戏信息配置"));
-        this.parent = parent;
-        this.config = GameinfoClient.config;
-    }
-
-    @Override
+     public GameInfoConfigScreen(Screen parent) {
+         super(Component.literal("游戏信息配置"));
+         this.parent = parent;
+         this.config = GameinfoClient.config;
+         saveSnapshot();
+     }
+ 
+     private void saveSnapshot() {
+         snapshotShowFPS = config.showFPS;
+         snapshotShowTimeAndDays = config.showTimeAndDays;
+         snapshotShowRealTime = config.showRealTime;
+         snapshotShowCoordinates = config.showCoordinates;
+         snapshotShowNetherCoordinates = config.showNetherCoordinates;
+         snapshotShowBiome = config.showBiome;
+         snapshotRemark = config.remark;
+         snapshotShowEquipment = config.showEquipment;
+         snapshotEnabled = config.enabled;
+         snapshotColor = config.color;
+         snapshotXPos = config.xPos;
+         snapshotYPos = config.yPos;
+         snapshotVersion = config.version;
+     }
+ 
+     private void restoreSnapshot() {
+         config.showFPS = snapshotShowFPS;
+         config.showTimeAndDays = snapshotShowTimeAndDays;
+         config.showRealTime = snapshotShowRealTime;
+         config.showCoordinates = snapshotShowCoordinates;
+         config.showNetherCoordinates = snapshotShowNetherCoordinates;
+         config.showBiome = snapshotShowBiome;
+         config.remark = snapshotRemark;
+         config.showEquipment = snapshotShowEquipment;
+         config.enabled = snapshotEnabled;
+         config.color = snapshotColor;
+         config.xPos = snapshotXPos;
+         config.yPos = snapshotYPos;
+         config.version = snapshotVersion;
+     }
+ 
+     @Override
     protected void init() {
         this.clearWidgets();
         
         // 创建Tab按钮
         createTabButtons();
         
-        // 根据当前Tab创建内容
-        if (currentTab == 0) {
-            createInfoToggleTab();
-        } else if (currentTab == 1) {
-            createColorSettingTab();
-        }
+         // 根据当前Tab创建内容
+         if (currentTab == 0) {
+             createInfoToggleTab();
+         } else if (currentTab == 1) {
+             createBasicSettingTab();
+         }
         
         // 创建底部按钮
         createBottomButtons();
@@ -121,19 +159,16 @@ public class GameInfoConfigScreen extends Screen {
 //        this.showFurnaceInfoButton = this.addDrawableChild(GuiHelper.createToggleButton(
 //                "熔炉信息", () -> config.showFurnaceInfo, value -> config.showFurnaceInfo = value,
 //                leftX, startY + spacing * 4, buttonWidth, buttonHeight));
-        this.enableButton = this.addRenderableWidget(GuiHelper.createToggleButton(
-                "启用游戏信息", () -> config.enabled, value -> {
-                    config.enabled = value;
-                    GameinfoClient.logger("启用游戏信息: " + value);
-                },
-                leftX, startY + spacing * 4, buttonWidth, buttonHeight));
-
-        this.realTimeButton = this.addRenderableWidget(GuiHelper.createToggleButton(
-                "现实时间", () -> config.showRealTime, value -> config.showRealTime = value,
-                leftX, startY + spacing * 5, buttonWidth, buttonHeight));
-
-        // 右列
-        int rightX = centerX + sideMargin;
+      this.enableButton = this.addRenderableWidget(GuiHelper.createToggleButton(
+                 "全局显示", () -> config.enabled, value -> {
+                     config.enabled = value;
+                     this.init();
+                     GameinfoClient.logger("启用游戏信息: " + value);
+                 },
+                 leftX, startY + spacing * 4, buttonWidth, buttonHeight));
+ 
+         // 右列
+         int rightX = centerX + sideMargin;
         this.biomeButton = this.addRenderableWidget(GuiHelper.createToggleButton(
                 "群系显示", () -> config.showBiome, value -> config.showBiome = value,
                 rightX, startY, buttonWidth, buttonHeight));
@@ -142,42 +177,45 @@ public class GameInfoConfigScreen extends Screen {
                 "装备显示", () -> config.showEquipment, value -> config.showEquipment = value,
                 rightX, startY + spacing, buttonWidth, buttonHeight));
 
-        this.remarkButton = this.addRenderableWidget(GuiHelper.createToggleButton(
-                "版本显示", () -> config.remark, value -> config.remark = value,
-                rightX, startY + spacing * 2, buttonWidth, buttonHeight));
-
-        this.showEntityInfoButton = this.addRenderableWidget(GuiHelper.createToggleButton(
-                "生物信息", () -> config.showEntityInfo, value -> config.showEntityInfo = value,
-                rightX, startY + spacing * 3, buttonWidth, buttonHeight));
-
-        this.showBlockInfoButton = this.addRenderableWidget(GuiHelper.createToggleButton(
-                "方块信息", () -> config.showBlockInfo, value -> config.showBlockInfo = value,
-                rightX, startY + spacing * 4, buttonWidth, buttonHeight));
-    }
+         this.remarkButton = this.addRenderableWidget(GuiHelper.createToggleButton(
+                 "版本显示", () -> config.remark, value -> config.remark = value,
+                 rightX, startY + spacing * 2, buttonWidth, buttonHeight));
+ 
+         this.realTimeButton = this.addRenderableWidget(GuiHelper.createToggleButton(
+                 "现实时间", () -> config.showRealTime, value -> config.showRealTime = value,
+                 rightX, startY + spacing * 3, buttonWidth, buttonHeight));
+     }
     
-    private void createColorSettingTab() {
-        int centerX = this.width / 2;
-        int startY = 100;
-        int spacing = 30;
-        
-        // 位置设置
-        this.xPosField = this.addRenderableWidget(GuiHelper.createNumberField(
-                this.font, "X位置", () -> config.xPos, value -> config.xPos = value,
-                centerX - 65, startY, 50, 20));
-
-        this.yPosField = this.addRenderableWidget(GuiHelper.createNumberField(
-                this.font, "Y位置", () -> config.yPos, value -> config.yPos = value,
-                centerX + 15, startY, 50, 20));
-
-        // 颜色选择按钮
-        this.colorButton = this.addRenderableWidget(Button.builder(
-                Component.literal("选择颜色"),
-                button -> this.minecraft.setScreen(new ColorPickerScreen(this, (color, colorName) -> {
-                    config.color = color;
-                })))
-                .bounds(centerX - 50, startY + spacing, 100, 20)
-                .build());
-    }
+     private void createBasicSettingTab() {
+         int centerX = this.width / 2;
+         int startY = 100;
+         int spacing = 30;
+         
+         // 位置设置
+         this.xPosField = this.addRenderableWidget(GuiHelper.createNumberField(
+                 this.font, "X位置", () -> config.xPos, value -> config.xPos = value,
+                 centerX - 65, startY, 50, 20));
+ 
+         this.yPosField = this.addRenderableWidget(GuiHelper.createNumberField(
+                 this.font, "Y位置", () -> config.yPos, value -> config.yPos = value,
+                 centerX + 15, startY, 50, 20));
+ 
+         // 版本备注输入框
+         this.versionField = new EditBox(this.font, centerX - 65, startY + spacing, 130, 20,
+                 Component.literal("版本备注"));
+         this.versionField.setValue(config.version);
+         this.versionField.setResponder(value -> config.version = value);
+         this.addRenderableWidget(this.versionField);
+ 
+         // 颜色选择按钮
+         this.colorButton = this.addRenderableWidget(Button.builder(
+                 Component.literal("选择颜色"),
+                 button -> this.minecraft.setScreen(new ColorPickerScreen(this, (color, colorName) -> {
+                     config.color = color;
+                 })))
+                 .bounds(centerX - 50, startY + spacing * 2, 100, 20)
+                 .build());
+     }
     
     private void createBottomButtons() {
         int centerX = this.width / 2;
@@ -214,40 +252,36 @@ public class GameInfoConfigScreen extends Screen {
         // 根据当前Tab绘制特定内容
         if (currentTab == 0) {
             renderInfoToggleTab(context);
-        } else if (currentTab == 1) {
-            renderColorSettingTab(context);
-        }
-    }
-    
-    private void renderInfoToggleTab(GuiGraphicsExtractor context) {
-        int centerX = this.width / 2;
-        context.centeredText(this.font, "选择要显示的信息", centerX, 70, 0xFFAAFFAA);
-    }
-    
-    private void renderColorSettingTab(GuiGraphicsExtractor context) {
-        int centerX = this.width / 2;
-        int startY = 100;
-        int spacing = 30;
-        
-        // 绘制标题
-        context.centeredText(this.font, "自定义显示位置和颜色", centerX, 70, 0xFFAAFFAA);
-        
-        // 绘制位置设置区域背景
-        int bgX = centerX - 150;
-        int bgY = startY - 10;
-        int bgWidth = 300;
-        int bgHeight = 100;
-        context.fill(bgX, bgY, bgX + bgWidth, bgY + bgHeight, 0x30333333);
-//        context.drawBorder(bgX, bgY, bgWidth, bgHeight, 0xFF444444);
-        
-        // 绘制X和Y标签
-        context.text(this.font, "X:", centerX - 85, startY + 4, 0xFFFFFFFF);
-        context.text(this.font, "Y:", centerX - 5, startY + 4, 0xFFFFFFFF);
-        
-        // 绘制颜色预览
-        int colorSize = 24;
-        int colorX = centerX + 65;
-        int colorY = startY + spacing - 2;
+      } else if (currentTab == 1) {
+             renderBasicSettingTab(context);
+         }
+     }
+     
+     private void renderInfoToggleTab(GuiGraphicsExtractor context) {
+         int centerX = this.width / 2;
+         context.centeredText(this.font, "选择要显示的信息", centerX, 70, 0xFFAAFFAA);
+     }
+     
+     private void renderBasicSettingTab(GuiGraphicsExtractor context) {
+         int centerX = this.width / 2;
+         int startY = 100;
+         int spacing = 30;
+         
+         // 绘制标题
+         context.centeredText(this.font, "自定义显示位置、版本、颜色", centerX, 70, 0xFFAAFFAA);
+         
+         
+         // 绘制X和Y标签
+         context.text(this.font, "X:", centerX - 85, startY + 6, 0xFFFFFFFF);
+         context.text(this.font, "Y:", centerX - 5, startY + 6, 0xFFFFFFFF);
+ 
+         // 绘制版本标签
+         context.text(this.font, "版本:", centerX - 95, startY + spacing + 6, 0xFFFFFFFF);
+         
+         // 绘制颜色预览
+         int colorSize = 24;
+         int colorX = centerX + 65;
+         int colorY = startY + spacing * 2 - 2;
         
         context.fill(colorX - 1, colorY - 1, colorX + colorSize + 1, colorY + colorSize + 1, 0xFF000000);
         context.fill(colorX, colorY, colorX + colorSize, colorY + colorSize, config.color);
@@ -258,10 +292,10 @@ public class GameInfoConfigScreen extends Screen {
         this.minecraft.setScreen(this.parent);
     }
 
-    @Override
-    public boolean isPauseScreen() {
-        return false;
-    }
+     @Override
+     public boolean isPauseScreen() {
+         return true;
+     }
     
     // Tab按钮类
     private static class TabButton extends Button {

@@ -20,6 +20,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.CommonColors;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -152,6 +154,24 @@ public class HudOverlay implements HudElement {
         // 使用配置文件中的版本号，而不是游戏版本号
         String versionValue = config.version != null && !config.version.isEmpty() ? config.version : SharedConstants.getCurrentVersion().name();
         int y = 2;
+        // 只有负面效果 -> 不动; 只有正面效果 -> 下移25; 两种都有 -> 下移52
+        LocalPlayer player = client.player;
+        if (player != null && !player.getActiveEffects().isEmpty()) {
+            boolean hasPositive = false;
+            boolean hasNegative = false;
+            for (MobEffectInstance effect : player.getActiveEffects()) {
+                if (effect.getEffect().value().isBeneficial()) {
+                    hasPositive = true;
+                } else {
+                    hasNegative = true;
+                }
+            }
+            if (hasPositive && hasNegative) {
+                y += 52;
+            } else if (hasPositive) {
+                y += 25;
+            }
+        }
         int x = client.getWindow().getGuiScaledWidth() - textRenderer.width(versionLabel + versionValue) - 2;
         drawContext.text(textRenderer, versionLabel, x, y, color, true);
         x += textRenderer.width(versionLabel);
@@ -175,11 +195,13 @@ public class HudOverlay implements HudElement {
         if (player == null) return 0;
         Level world = player.level();
 
-        long timeOfDay = world.getLevelData().getGameTime() % 24000;
+        long dayTime = world.getLevelData().getGameTime();
+        long timeOfDay = dayTime % 24000;
         // 时间为0的时候对应的是6:00
         int hours = (int) ((6 + (timeOfDay / 1000)) % 24);
         int minutes = (int) ((timeOfDay % 1000) * 60 / 1000);
-        int days = (int) (world.getLevelData().getGameTime() / 24000);
+        // 0点天数加一（偏移6000刻使得午夜成为新一天的起点）
+        int days = (int) ((dayTime + 6000) / 24000);
         String daysText = "天数: ";
         drawContext.text(textRenderer, daysText, x, y, color, true);
         int width = textRenderer.width(daysText);
@@ -216,7 +238,8 @@ public class HudOverlay implements HudElement {
         if (!config.showCoordinates) return 0;
         LocalPlayer player = client.player;
         if (player == null) return 0;
-        BlockPos pos = player.blockPosition(); // 获取玩家的方块位置
+        // 获取相机或玩家位置(兼容 Tweakeroo Free Camera / 灵魂出窍)
+        BlockPos pos = getCameraOrPlayerPosition();
         String directionString = getDirectionString();
         String xyzText = "XYZ: ";
         drawContext.text(textRenderer, xyzText, x, y, color, true);
@@ -232,7 +255,10 @@ public class HudOverlay implements HudElement {
         LocalPlayer player = client.player;
         if (player == null) return 0;
         Level world = player.level();
-        BlockPos pos = player.blockPosition();
+        // 末地不显示下界坐标
+        if (world.dimension().identifier().equals(Level.END.identifier())) return 0;
+        // 使用与主坐标相同的位置获取逻辑(兼容 Tweakeroo Free Camera / 灵魂出窍)
+        BlockPos pos = getCameraOrPlayerPosition();
 
         String coordinateText = "";
         if (world.dimension().identifier().equals(Level.OVERWORLD.identifier())) {
@@ -253,7 +279,8 @@ public class HudOverlay implements HudElement {
         LocalPlayer player = client.player;
         if (player == null) return 0;
         Level world = player.level();
-        BlockPos pos = player.blockPosition();
+        // 使用相机或玩家位置(兼容 Tweakeroo Free Camera / 灵魂出窍)
+        BlockPos pos = getCameraOrPlayerPosition();
 
         Holder<Biome> biomeEntry = world.getBiome(pos);
         Identifier biomeId = biomeEntry.unwrapKey().map(ResourceKey::identifier).orElse(null);
@@ -275,7 +302,12 @@ public class HudOverlay implements HudElement {
 
     private String getDirectionString() {
         Direction direction = null;
-        if (client.player != null) {
+        // 如果启用了 Free Camera(灵魂出窍),使用相机朝向;否则使用玩家朝向
+        Entity cameraEntity = client.getCameraEntity();
+        if (cameraEntity != null && cameraEntity != client.player) {
+            // Free Camera 启用,使用相机朝向
+            direction = Direction.fromYRot(cameraEntity.getYRot());
+        } else if (client.player != null) {
             direction = client.player.getDirection();
         }
         String directionString = null;
@@ -291,4 +323,21 @@ public class HudOverlay implements HudElement {
         return directionString;
     }
 
+    /**
+     * 获取相机或玩家位置
+     * 如果启用了 Free Camera(灵魂出窍),则返回相机位置
+     * 否则返回玩家实体位置
+     */
+    private BlockPos getCameraOrPlayerPosition() {
+        Entity cameraEntity = client.getCameraEntity();
+        if (cameraEntity != null && cameraEntity != client.player) {
+            return cameraEntity.blockPosition();
+        }
+        return client.player.blockPosition();
+    }
+
 }
+
+
+
+

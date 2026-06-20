@@ -177,10 +177,10 @@ public class ColorPickerScreen extends Screen {
         this.minecraft.setScreen(this.parent);
     }
 
-    @Override
-    public boolean isPauseScreen() {
-        return false;
-    }
+     @Override
+     public boolean isPauseScreen() {
+         return true;
+     }
 
     // 自定义颜色按钮类
     private static class ColorButton extends Button {
