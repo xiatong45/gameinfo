@@ -195,11 +195,11 @@ public class HudOverlay implements HudElement {
         if (player == null) return 0;
         Level world = player.level();
 
-        long timeOfDay = world.getLevelData().getGameTime() % 24000;
+        long timeOfDay = world.getDefaultClockTime() % 24000;
         // 时间为0的时候对应的是6:00
         int hours = (int) ((6 + (timeOfDay / 1000)) % 24);
         int minutes = (int) ((timeOfDay % 1000) * 60 / 1000);
-        int days = (int) (world.getLevelData().getGameTime() / 24000);
+        int days = (int) (world.getDefaultClockTime() / 24000);
         String daysText = "天数: ";
         drawContext.text(textRenderer, daysText, x, y, color, true);
         int width = textRenderer.width(daysText);
@@ -255,6 +255,11 @@ public class HudOverlay implements HudElement {
         Level world = player.level();
         // 使用与主坐标相同的位置获取逻辑(兼容 Tweakeroo Free Camera / 灵魂出窍)
         BlockPos pos = getCameraOrPlayerPosition();
+
+        // 末地不显示下界坐标
+        if (world.dimension().identifier().equals(Level.END.identifier())) {
+            return 0;
+        }
 
         String coordinateText = "";
         if (world.dimension().identifier().equals(Level.OVERWORLD.identifier())) {
@@ -333,7 +338,3 @@ public class HudOverlay implements HudElement {
     }
 
 }
-
-
-
-

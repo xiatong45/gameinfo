@@ -283,10 +283,6 @@ public class GameInfoConfigScreen extends Screen {
         context.fill(colorX, colorY, colorX + colorSize, colorY + colorSize, config.color);
     }
 
-    @Override
-    public void onClose() {
-        this.minecraft.gui.setScreen(this.parent);
-    }
 
     @Override
     public boolean isPauseScreen() {
@@ -294,7 +290,23 @@ public class GameInfoConfigScreen extends Screen {
     }
     
     // Tab按钮类
-    private static class TabButton extends Button {
+    
+@Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent keyEvent) {
+        if (keyEvent.key() == 256) { // ESC
+            restoreSnapshot();
+            this.onClose();
+            return true;
+        }
+        return super.keyPressed(keyEvent);
+    }
+
+    @Override
+    public void onClose() {
+        this.minecraft.gui.setScreen(this.parent);
+    }
+
+private static class TabButton extends Button {
         private final boolean isActive;
         
         public TabButton(int x, int y, int width, int height, String text, boolean isActive, Runnable onPress) {
@@ -329,3 +341,4 @@ public class GameInfoConfigScreen extends Screen {
         }
     }
 }
+    
