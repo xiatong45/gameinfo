@@ -292,6 +292,16 @@ public class GameInfoConfigScreen extends Screen {
     }
     
     // Tab按钮类
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == 256) { // ESC
+            restoreSnapshot();
+            this.onClose();
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
     private static class TabButton extends Button {
         private final boolean isActive;
         
