@@ -292,6 +292,16 @@ import net.minecraft.network.chat.Component;
         this.minecraft.setScreen(this.parent);
     }
 
+    @Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent keyEvent) {
+        if (keyEvent.key() == 256) { // ESC
+            config.loadConfig();
+            this.onClose();
+            return true;
+        }
+        return super.keyPressed(keyEvent);
+    }
+
      @Override
      public boolean isPauseScreen() {
          return true;

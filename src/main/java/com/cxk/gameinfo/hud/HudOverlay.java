@@ -195,13 +195,11 @@ public class HudOverlay implements HudElement {
         if (player == null) return 0;
         Level world = player.level();
 
-        long dayTime = world.getLevelData().getGameTime();
-        long timeOfDay = dayTime % 24000;
+        long timeOfDay = world.getDefaultClockTime() % 24000;
         // 时间为0的时候对应的是6:00
         int hours = (int) ((6 + (timeOfDay / 1000)) % 24);
         int minutes = (int) ((timeOfDay % 1000) * 60 / 1000);
-        // 0点天数加一（偏移6000刻使得午夜成为新一天的起点）
-        int days = (int) ((dayTime + 6000) / 24000);
+        int days = (int) (world.getDefaultClockTime() / 24000);
         String daysText = "天数: ";
         drawContext.text(textRenderer, daysText, x, y, color, true);
         int width = textRenderer.width(daysText);
